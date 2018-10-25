@@ -25,6 +25,7 @@ from ssh_ping_cmd_for_Linux import ssh_onetime_ping, ssh_jump_server_cmd,ssh_jum
 #from SendEmail import sendemail,html_line_break
 import threading
 import datetime
+import csv
 
 
 dsc_dlb_login_ip={"HK DSC":"10.162.28.187","SG DSC":"10.163.28.132","AMS DSC":"10.160.28.221","FRT DSC":"10.161.28.249","CHI DSC":"10.166.28.201","DAL DSC":"10.164.28.190"}
@@ -71,6 +72,8 @@ def ssh_exe_cmd(orgin_dsc,dest_dsc):
 	while True:
 		try:
 			nowTime=datetime.datetime.now().strftime('%Y-%m-%d-%H-%M')
+			nowtime_no_line=datetime.datetime.now().strftime('%Y%m%d%H%M')
+			nowtime_day=datetime.datetime.now().strftime('%Y%m%d')
 			#print(nowTime)
 			results=ssh_onetime_ping(hostname,username,password,cmd)
 			#flag=flag-1
@@ -80,6 +83,25 @@ def ssh_exe_cmd(orgin_dsc,dest_dsc):
 			with open("/data2/TMP/tsdss/DSC_Internal_Cross_Ping_Tool/internal_ping_logs/internal_cross_ping_log_"+nowTime+".log", 'a+') as f1:
 				print('***************************************************************'+'\n'+orgin_dsc+'---->'+dest_dsc+" ping results:"+'\n'+result_final+'\n', file=f1)
 				#print('***************************************************************'+'\n'+orgin_dsc+'---->'+dest_dsc+" ping results:"+'\n'+result_final+'\n')
+			
+			print(result_final)
+			result_list=result_final.split(' ')
+			for item in result_list:
+				if '%' in item:
+					package_loss_rate=item
+			print(package_loss_rate)
+			
+			path=orgin_dsc+'-'+dest_dsc
+			print(path)
+
+			kpi_filename="/data2/TMP/tsdss/DSC_Internal_Cross_Ping_Tool/internal_ping_logs/KPI_internal_cross_ping_"+path+'_'+nowtime_day+".csv"
+			print(kpi_filename)
+
+           			with open(kpi_filename,'a+') as kpifile:
+				writer = csv.writer(kpifile)
+				writer.writerow([nowtime_no_line,package_loss_rate])
+				kpifile.close()
+			
 			
 			if '60 received' not in result_final:
 				with open("/data2/TMP/tsdss/DSC_Internal_Cross_Ping_Tool/internal_ping_logs/internal_cross_ping_package_loss_log_"+nowTime+".log", 'a+') as f2:
